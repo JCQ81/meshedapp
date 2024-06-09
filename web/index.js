@@ -27,7 +27,14 @@ $(document).ready( function () {
       })
   );
   update();
-  setInterval(() => { update(); }, 10000);
+  setInterval(() => { update(); }, 2000);
+});
+
+// global default onclick
+$(document).on('click', function(event) {
+  if (event.target.className != 'sidebar_add') {
+    nodelist.hide();
+  }
 });
 
 function update() {
@@ -47,7 +54,7 @@ function loadNav() {
   sidebar.empty().append(
     $('<div/>', { class:'sidebar_add'}).text('👤➕')
       .on('click', function() {
-        nodelist.show();
+        nodelist.empty().show();
         $.each(nodes.nodes, function(id, nodeInfo) {          
           let nodecolor = strColor(id);
           let newnode = [

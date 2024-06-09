@@ -11,6 +11,7 @@
   --chatbar-color: #1a1a1a;
   --chatbar-background: #fafafa;
 }
+
 * {
   margin: 0;
   font-size: 14px;
@@ -164,4 +165,57 @@ input, select, textarea {
 .chatbar_button {
   width: 40px;
   cursor: pointer;
+}
+
+
+
+@media (pointer:none), (pointer:coarse) {
+  :root {
+    --titlebar-height: 80px;
+    --sidebar-width: 160px;
+  }
+  * {
+    font-size: 34px;
+  }
+  .titlebar {
+    padding: 18px 32px;
+  }
+  .sidebar_add {
+    height: 50px;
+  }
+  .sidebar_node {
+    height: 100px;
+  }
+  .node_shortname {
+    width: 120px;
+    height: 50px;
+  }
+  .node_longname {
+    font-size: 16px;
+    margin-top: 10px;
+    margin-left: 10px;
+  }
+  .node_text {
+    display:none;
+  }
+  .msg_text {
+    height: 95px;
+    margin-top: -48px;
+    margin-left: 145px;
+  }
+  .msg_time {
+    margin-left: 0px;
+  }
+  .chatbar {
+    margin-bottom: 28px;
+  }
+  .chatbar_button {
+    width: 70px;
+  }
+  .nodelist {
+    position: absolute;
+    top: 90px;
+    left: 155px;  
+    width: 182px;
+  }
 }
