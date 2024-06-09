@@ -12,6 +12,8 @@ cd meshedapp
 ./meshedapp.py [meshedapp-ip]
 ```
 
+Now browse to [http://yourserver:6374](http://yourserver:6374)
+
 ## Docker
 
 ```
