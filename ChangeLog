@@ -1,0 +1,16 @@
+
+ CHANGES
+*********
+
+v1.1.0 (2024-06-14):
+- WSGI to Waitress
+- Auto reconnect
+- Docker image to Alpine
+- Character limit and counter
+- Added Favicon
+
+v1.0.1 (2024-06-13):
+- Setup on Synology
+
+v1.0.0 (2024-06-09)
+- Initial commit
