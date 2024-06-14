@@ -1,31 +1,53 @@
 #!/usr/bin/python3
 
 import time, os, sys, datetime, meshtastic, meshtastic.serial_interface, meshtastic.tcp_interface
-from flask import Flask, Response, json, request, abort
+from flask import Flask, Response, json, request, send_file, abort
+from threading import Thread
+from waitress import serve
 from pubsub import pub
 
 #### == Globals == ####
 
-self = None
+myId = None
 nodes = {}
 ltime = time.time()
 interface = None
 
 app = Flask(__name__)
 
+# Initialize connection, gather info
 def init():
-  global self
+  global myId
+  global nodes
   global interface
   pub.subscribe(onReceive, "meshtastic.receive.text")
+  pub.subscribe(onDisconnect, "meshtastic.connection.lost")
   if len(sys.argv) < 2:
     interface = meshtastic.serial_interface.SerialInterface()
   else:
     interface = meshtastic.tcp_interface.TCPInterface(hostname=sys.argv[1])
-  self = f'!{str(hex(interface.myInfo.my_node_num))[2:]}'
+  print('Connected')
+  myId = f'!{str(hex(interface.myInfo.my_node_num))[2:]}'
   for id,data in interface.nodes.items():
-    nodes[id] = data['user'] 
+    nodes[id] = data['user']
 
-def onReceive(packet, interface): # called when a packet arrives
+# Flush stdout for docker logs
+def bgFlush():
+  while True:
+    time.sleep(1)
+    sys.stdout.flush()
+
+# Auto reconnect every 30min for restoring connection on any uncatchable error 
+# ( interface.close() triggers onDisconnect() )
+def bgRefresh():
+  global interface
+  while True:
+    time.sleep(1800)
+    print('Refresh: ', end='')
+    interface.close()
+
+# Recieve packet
+def onReceive(packet, interface):
   global ltime
   ltime = time.time()
   sender = packet['fromId']
@@ -35,12 +57,18 @@ def onReceive(packet, interface): # called when a packet arrives
   f.write(f"{datetime.datetime.fromtimestamp(packet['rxTime']).strftime('%Y-%m-%d %H:%M:%S')};{sender};{text}\n")
   f.close()
 
+# Auto reconnect on disconnect
+def onDisconnect(interface):
+  print('Reconnecting... ', end='')
+  init()
+
+# Return files from ./web
 def httpfile(target):
-  if target in ['index.html', 'index.css', 'index.js', 'index.json', 'jquery-3.6.0.min.js' ]:
-    file = open(f'./web/{target}', 'r')
-    data = file.read()
-    file.close()
-    return Response(data, mimetype='text/' + target[::-1].split('.')[0][::-1])
+  if target in ['index.html', 'index.css', 'index.js', 'index.json', 'jquery-3.6.0.min.js', 'favicon.ico' ]:
+    if target == 'favicon.ico':
+      return send_file(f'./web/{target}', mimetype='image/gif')
+    else:
+      return send_file(f'./web/{target}', mimetype='text/' + target[::-1].split('.')[0][::-1])
   else:
     abort(404)   
 
@@ -78,10 +106,13 @@ def rt_nodes_get():
 # Node data
 @app.route('/msh/<node>', methods=['GET'])
 def rt_msh_get(node):
-  file = open(f'./store/{node}.csv', 'r')
-  data = file.read()
-  file.close()
-  return Response(data, mimetype='text/plain')
+  if os.path.isfile(f'./store/{node}.csv'):
+    file = open(f'./store/{node}.csv', 'r')
+    data = file.read()
+    file.close()
+    return send_file(f'./store/{node}.csv', mimetype='text/plain')
+  else:
+    return Response('', mimetype='text/plain')
 
 # Node send
 @app.route('/msh/<node>', methods=['POST'])
@@ -94,7 +125,7 @@ def rt_msh_post(node):
   else:
     interface.sendText(msg, f'!{node}')
   f = open(f'store/{node}.csv', 'a')
-  f.write(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')};{self};{msg}\n")
+  f.write(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')};{myId};{msg}\n")
   f.close()
   ltime = time.time()
   return Response('')  
@@ -102,5 +133,6 @@ def rt_msh_post(node):
 #### == Main == ####
 if __name__ == '__main__':
   init()
-  print('Connected')
-  app.run(host='0.0.0.0', port=6374)
+  Thread(target=bgFlush, daemon=True, name='bgFlush').start()
+  Thread(target=bgRefresh, daemon=True, name='bgRefresh').start()
+  serve(app, host="0.0.0.0", port=6374)

@@ -1,13 +1,14 @@
 #!/bin/bash
 
-cd /opt/meshedapp
-if [ ! -f ./store/_all.csv ]; then
-  mkdir -p ./store
-  echo "Initial load;;Welcome in your Meshtastic primary channel" >./store/_all.csv
+PTH=/opt/meshedapp
+if [ ! -f $PTH/store/_all.csv ]; then
+  mkdir -p $PTH/store
+  echo "Initial load;;Welcome in your Meshtastic primary channel" >$PTH/store/_all.csv
 fi
+chown -R meshedapp $PTH/store
 
-if [ -z ${MESHTASTIC_HOST} ]; then
-  ./meshedapp.py
+if [ -z $MESHTASTIC_HOST ]; then
+  su - meshedapp -c "cd $PTH; source ./env/bin/activate && python3 ./meshedapp.py" 2>/dev/null
 else
-  ./meshedapp.py ${MESHTASTIC_HOST}
+  su - meshedapp -c "cd $PTH; source ./env/bin/activate && python3 ./meshedapp.py $MESHTASTIC_HOST" 2>/dev/null
 fi

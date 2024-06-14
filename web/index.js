@@ -4,6 +4,7 @@ let sidebar = $('<div/>', { class:'sidebar'});
 let content = $('<div/>', { class:'content'});
 let chatbar = $('<div/>', { class:'chatbar'});
 let nodelist = $('<div/>', { class:'nodelist'});
+let charcnt = $('<span/>', { class:'chatbar_count' }).html('0');
 
 let nodes = {};
 let lchange = 0;
@@ -12,14 +13,16 @@ let chatbox = null;
 
 $(document).ready( function () {
   $('body').append(titlebar.text('MeshedApp'), sidebar, content, chatbar, nodelist);
-  chatbox = $('<input/>', { class:'chatbar_input' })
-    .on('keydown', function(event) { 
+  chatbox = $('<input/>', { class:'chatbar_input', maxlength:250 })
+    .on('keydown', function(event) {
       if (event.which == '13') { 
         sendChat(actnode, $(this).val());
-      } 
+      }
+    }).on('change input keyup cut copy paste', function() {
+      charcnt.html(this.value.length);
     });
   chatbar.append(
-    chatbox, '&emsp;',
+    chatbox, charcnt,
     $('<input/>', { class:'chatbar_button', type:'button' })
       .val('✉')
       .on('click', function() { 
