@@ -2,6 +2,11 @@
  CHANGES
 *********
 
+v1.1.1 (2024-06-17):
+- Show URL as hyperlink
+- Fix message separator issue
+- Fix inbound first message
+
 v1.1.0 (2024-06-14):
 - WSGI to Waitress
 - Auto reconnect
