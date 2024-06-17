@@ -119,13 +119,20 @@ function loadChat(node) {
     content.empty().append(inner);
     for (let i=0; i<lines.length; i++) {
       if (lines[i].length > 3) {
-        let line = lines[i].split(';',3);
+        let line = lines[i].split(';');
+        let lmsg = line.slice(2).join(';').replace(/(<([^>]+)>)/ig, '');
         let shnm = (typeof line[1] == 'undefined' || typeof nodes.nodes[line[1]] == 'undefined') ? line[1] : nodes.nodes[line[1]].shortName;
         let nodecolor = (typeof line[1] == 'undefined') ? 'CCC' :strColor(line[1]);
+        let words = lmsg.split(/[\s,]+/);
+        words.forEach(function(word) {
+          if (word.match(/^(ht|f)tp/) && word.match(/(ht|f)tp[s]?\:\/\/[a-zA-Z0-9\-\.\:@]+([a-zA-Z0-9\/\:\.\-_?=&#%]*)?$/)) {
+            lmsg = lmsg.replace(word, `<a href="${word}" target=_blank>${word}</a>`);
+          }          
+        });
         inner.append(
           $('<div/>', { class:'content_message'}).append(
             $('<div/>', { class:'node_shortname', style:`background:#${nodecolor}`}).text(shnm),
-            $('<div/>', { class:'msg_text'}).text(line[2]),
+            $('<div/>', { class:'msg_text'}).html(lmsg),
             $('<div/>', { class:'msg_time'}).text(line[0])
           )
         );
