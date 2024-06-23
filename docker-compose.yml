@@ -1,0 +1,15 @@
+version: '3'
+services:
+  meshedapp:
+    container_name: meshedapp
+    image: meshedapp
+    restart: always
+    ports:
+      - '6374:6374'
+    environment:
+       MESHTASTIC_HOST: '192.168.0.1'
+    volumes:
+      - meshedapp:/opt/meshedapp/store
+volumes:
+  meshedapp:
+    driver: local
