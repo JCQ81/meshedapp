@@ -131,7 +131,7 @@ input, select, textarea {
   color: var(--chatbar-color);
 }
 .node_text {
-  width: 600px;
+  width: 200px;
   margin-top: 12px;
   margin-left: 8px;
   font-style: italic;
@@ -147,9 +147,11 @@ input, select, textarea {
 }
 .msg_text {
   width: 600px;
-  height: 45px;
-  margin-top: -26px;
+  height: auto;
+  min-height: 30px;
+  margin-top: -24px;
   margin-left: 80px;
+  padding-bottom: 12px;
 }
 .msg_time {
   margin-bottom: -14px;
@@ -194,6 +196,9 @@ input, select, textarea {
   .sidebar_node {
     height: 100px;
   }
+  .content_inner {
+    padding-bottom: 28px;
+  }
   .node_shortname {
     width: 120px;
     height: 50px;
@@ -202,12 +207,13 @@ input, select, textarea {
     font-size: 16px;
     margin-top: 10px;
     margin-left: 10px;
+    margin-left: 4px;
   }
   .node_text {
     display:none;
   }
   .msg_text {
-    height: 95px;
+    min-height: 65px;
     margin-top: -48px;
     margin-left: 145px;
   }
