@@ -63,7 +63,7 @@ function update() {
     if (status.update != lchange) {
       $.when( api('get', 'nodes') ).done(function(data) {
         nodes = data;
-        version.text(data.server.version);
+        version.text(`v${data.server.version}`);
         loadNav();
         loadChat(actnode);
         if (notify && lchange != 0 && 'sender' in status && !status.message.startsWith('/')) {
