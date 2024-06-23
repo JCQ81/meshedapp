@@ -5,6 +5,7 @@ let content = $('<div/>', { class:'content'});
 let chatbar = $('<div/>', { class:'chatbar'});
 let nodelist = $('<div/>', { class:'nodelist'});
 let charcnt = $('<span/>', { class:'chatbar_count' }).html('0');
+let version = $('<div/>', { class:'titlebar_version'});
 
 let nodes = {};
 let lchange = 0;
@@ -31,7 +32,7 @@ $(document).ready( function () {
   }
   console.log(`Notifications available: ${notify}`);
 
-  $('body').append(titlebar.text('MeshedApp'), sidebar, content, chatbar, nodelist);
+  $('body').append(titlebar.text('MeshedApp').append(version), sidebar, content, chatbar, nodelist);
   chatbox = $('<input/>', { class:'chatbar_input', maxlength:235 })
     .on('keydown', function(event) {
       if (event.which == '13') { 
@@ -47,7 +48,7 @@ $(document).ready( function () {
     });
   chatbar.append(chatbox, charcnt, chatbtn);
   update();
-  setInterval(() => { update(); }, 2000);
+  setInterval(() => { update(); }, 5000);
 });
 
 // global default onclick
@@ -62,6 +63,7 @@ function update() {
     if (status.update != lchange) {
       $.when( api('get', 'nodes') ).done(function(data) {
         nodes = data;
+        version.text(data.server.version);
         loadNav();
         loadChat(actnode);
         if (notify && lchange != 0 && 'sender' in status && !status.message.startsWith('/')) {

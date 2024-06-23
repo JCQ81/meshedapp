@@ -92,7 +92,13 @@ input, select, textarea {
   display: none;
   z-index: 200;
 }
-
+.titlebar_version {
+  position: absolute; 
+  bottom:22px; 
+  right:40px; 
+  font-size:10px; 
+  color:#888;
+}
 .sidebar_add {
   height: 20px;
   margin: 10px;
@@ -160,7 +166,6 @@ input, select, textarea {
   font-style: italic;
   color: #aaa;
 }
-
 .chatbar_input {
   width: 600px;
 }
