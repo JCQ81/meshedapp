@@ -16,7 +16,9 @@ lpack = {}
 ltime = time.time()
 ltracelen = 0
 interface = None
+version = '1.2.0'
 rssfeed = None
+autoreconnect = True
 
 app = Flask(__name__)
 
@@ -54,7 +56,8 @@ def sendText(msg, dst='^all', channelIndex=0):
       retry -= 1
       interface.close()
       time.sleep(10)
-  print("Message not sent!!! (ノಠ益ಠ)ノ彡┻━┻")
+      log('Retry sending message')
+  log("Message not sent!!! (ノಠ益ಠ)ノ彡┻━┻")
 
 # Flush stdout for docker logs
 def bgFlush():
@@ -83,7 +86,7 @@ def bgRefresh():
       log(f'TraceData: {stacktrace[ltracelen:]}')
       log(f'DataLength: {ntracelen}')      
       ltracelen = ntracelen
-      interface.close()
+      reconnect()
     # Reconnect every 30min anyway
     elif rcnt >= 15:
       rcnt = 0
@@ -147,8 +150,20 @@ def onReceive(packet, interface):
 
 # Auto reconnect on disconnect
 def onDisconnect(interface):
-  log('Reconnecting... ')
+  global autoreconnect
+  if autoreconnect:
+    log('Reconnecting... ')
+    init()
+
+# Enforced reconnect (use when onDisconnect is not reliable)
+def reconnect():
+  global interface
+  global autoreconnect
+  log('Reconnecting... (forced)')
+  autoreconnect = False
+  interface.close()
   init()
+  autoreconnect = True
 
 # Return files from ./web
 def httpfile(target):
@@ -201,13 +216,14 @@ def rt_status_get():
 def rt_nodes_get():
   global nodes
   global channels
+  global version
   lmsg = {}
   path = './store'
   for filenm in [item for item in os.listdir(path) if os.path.isfile(f'{path}/{item}')]:
     with open(f'{path}/{filenm}', 'r') as store:
       data = store.readlines()
     lmsg[f'!{filenm[:-4]}'] = str(data[-1].split(';')[2].rstrip('\n'))
-  return Response(json.dumps({ 'nodes':nodes, 'channels':channels, 'lmsg':lmsg }), mimetype='application/json')
+  return Response(json.dumps({ 'nodes':nodes, 'channels':channels, 'lmsg':lmsg, 'server': { 'version':version } }), mimetype='application/json')
 
 # Node data
 @app.route('/msh/<node>', methods=['GET'])
