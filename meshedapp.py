@@ -132,6 +132,7 @@ def rt_msh_post(node):
 
 #### == Main == ####
 if __name__ == '__main__':
+  os.umask(18)
   init()
   Thread(target=bgFlush, daemon=True, name='bgFlush').start()
   Thread(target=bgRefresh, daemon=True, name='bgRefresh').start()
