@@ -2,6 +2,8 @@
 
 A simple self hosted web interface for your Meshtastic chat,  centrally hosted on your home server. 
 
+![](./img/mappinfr1.png)
+
 ![](./img/example1.png)
 
 ## Index
