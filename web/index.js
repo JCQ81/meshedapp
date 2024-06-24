@@ -5,15 +5,35 @@ let content = $('<div/>', { class:'content'});
 let chatbar = $('<div/>', { class:'chatbar'});
 let nodelist = $('<div/>', { class:'nodelist'});
 let charcnt = $('<span/>', { class:'chatbar_count' }).html('0');
+let version = $('<div/>', { class:'titlebar_version'});
 
 let nodes = {};
 let lchange = 0;
 let actnode = '!^all';
 let chatbox = null;
+let chatbtn = null;
+let notify = false;
 
 $(document).ready( function () {
-  $('body').append(titlebar.text('MeshedApp'), sidebar, content, chatbar, nodelist);
-  chatbox = $('<input/>', { class:'chatbar_input', maxlength:250 })
+  if ("Notification" in window) {
+    if (Notification.permission === "granted") {
+      notify = true;
+    }
+    else {
+      Notification.requestPermission().then(function (permission) {
+        if (permission === "granted") {
+          notify = true;
+        }
+      });
+    }
+  }
+  else {
+    console.log('Notifications not supported by browser')
+  }
+  console.log(`Notifications available: ${notify}`);
+
+  $('body').append(titlebar.text('MeshedApp').append(version), sidebar, content, chatbar, nodelist);
+  chatbox = $('<input/>', { class:'chatbar_input', maxlength:235 })
     .on('keydown', function(event) {
       if (event.which == '13') { 
         sendChat(actnode, $(this).val());
@@ -21,16 +41,14 @@ $(document).ready( function () {
     }).on('change input keyup cut copy paste', function() {
       charcnt.html(this.value.length);
     });
-  chatbar.append(
-    chatbox, charcnt,
-    $('<input/>', { class:'chatbar_button', type:'button' })
-      .val('✉')
-      .on('click', function() { 
-        sendChat(actnode, chatbox.val());
-      })
-  );
+  chatbtn = $('<input/>', { class:'chatbar_button', type:'button' })
+    .val('✉')
+    .on('click', function() { 
+      sendChat(actnode, chatbox.val());
+    });
+  chatbar.append(chatbox, charcnt, chatbtn);
   update();
-  setInterval(() => { update(); }, 2000);
+  setInterval(() => { update(); }, 5000);
 });
 
 // global default onclick
@@ -45,16 +63,38 @@ function update() {
     if (status.update != lchange) {
       $.when( api('get', 'nodes') ).done(function(data) {
         nodes = data;
+        version.text(`v${data.server.version}`);
         loadNav();
         loadChat(actnode);
+        if (notify && lchange != 0 && 'sender' in status && !status.message.startsWith('/')) {
+          let sender = (status.sender in nodes.nodes) ? nodes.nodes[status.sender].shortName : 'Unknown User'
+          let ntfc = new Notification(`${sender}: ${status.message}`);
+        }
         lchange = status.update;
       });
     }        
   });
 }
 
-function loadNav() {
-  sidebar.empty().append(
+function genNode(id, shortName, longName, msg='') {  
+  msg = (msg.length > 20) ? msg.trim().substring(0,24) + '...' : msg;  
+  longName = (longName.length > 20) ? longName.trim().substring(0,14) + '...' : longName;
+  nodeColor = (id.startsWith('!_')) ? 'ccc' : strColor(id);
+  let node = $('<div/>', { class:'sidebar_node'}).append(
+    $('<div/>', { class:'node_shortname', style:`background:#${nodeColor}`}).text(shortName),
+    $('<div/>', { class:'node_longname'}).text(longName),
+    $('<div/>', { class:'node_text'}).text(msg)
+  ).on('click', function() {
+    loadChat(id);
+  });
+  return node;
+
+}
+
+function loadNav() {  
+  sidebar.empty();
+  // New chat/node
+  sidebar.append(
     $('<div/>', { class:'sidebar_add'}).text('👤➕')
       .on('click', function() {
         nodelist.empty().show();
@@ -64,7 +104,7 @@ function loadNav() {
             $('<div/>', { class:'node_shortname', style:`background:#${nodecolor}`}).text(nodeInfo.shortName),
             $('<div/>', { class:'node_longname'}).text(nodeInfo.longName),
             $('<div/>', { class:'node_text'}).text()
-          ]          
+          ]         
           nodelist.append(
             $('<div/>', { class:'sidebar_node'}).append(
               newnode
@@ -84,30 +124,50 @@ function loadNav() {
               nodelist.hide();
             })
           )
-        })       
-
+        })
       })
   );
-  $.each(nodes.lmsg, function(id, msg) {
-    let longName = 'Channel 0';
-    let shortName = '0';   
-    let nodecolor = 'ccc';
-    msg = (msg.length > 20) ? msg.trim().substring(0,20) + '...' : msg;
-    if (id != '!_all') {
-      shortName = nodes.nodes[id].shortName;
-      longName = nodes.nodes[id].longName;
-      nodecolor = strColor(id);
-    }    
+  // Add channels
+  $.each(nodes.channels, function(cid, cname) {
+    let id = (cid == '0') ? '!_all' : `!_ch${cid}`;
     sidebar.append(
-      $('<div/>', { class:'sidebar_node'}).append(
-        $('<div/>', { class:'node_shortname', style:`background:#${nodecolor}`}).text(shortName),
-        $('<div/>', { class:'node_longname'}).text(longName),
-        $('<div/>', { class:'node_text'}).text(msg)
-      ).on('click', function() {
-        loadChat(id);
-      }),
+      genNode(
+        id,
+        `CH${cid}`,
+        (cname == '') ? `Channel ${cid}` : cname,
+        (id in nodes.lmsg) ? nodes.lmsg[id] : ''
+      )
     );
-  });  
+  });
+  // Add nodes
+  $.each(nodes.lmsg, function(id, msg) {
+    if (!id.startsWith('!_')) {
+      if (id in nodes.nodes) {
+        sidebar.append(
+          genNode(
+            id,
+            nodes.nodes[id].shortName,
+            nodes.nodes[id].longName,
+            msg
+          )
+        );
+      }
+      else {
+        sidebar.append(
+          genNode(
+            id,
+            '[----]',
+            id,
+            msg
+          )
+        );
+      }
+    }
+  });
+  // Add CMD log
+  sidebar.append(
+    genNode('!_cmd', 'CMD', '/CMD', ('!_cmd' in nodes.lmsg) ? nodes.lmsg['!_cmd'] : '' )
+  );
 }
 
 function loadChat(node) {
@@ -115,7 +175,7 @@ function loadChat(node) {
   node = (node == '!^all') ? '_all' : node.slice(1);
   $.when( api('get', node) ).done(function(data) {
     let lines = data.split('\n');
-    let inner = $('<div/>');
+    let inner = $('<div/>', { class:'content_inner' });
     content.empty().append(inner);
     for (let i=0; i<lines.length; i++) {
       if (lines[i].length > 3) {
@@ -140,7 +200,15 @@ function loadChat(node) {
     }
     content.scrollTop(inner.height());
   });
-  chatbox.focus();
+  if (node == '_cmd') {
+    chatbox.attr('disabled','disabled');
+    chatbtn.attr('disabled','disabled');
+  }
+  else {
+    chatbox.removeAttr('disabled');
+    chatbtn.removeAttr('disabled');
+    chatbox.focus();
+  }  
 }
 
 function sendChat(node, msg) {

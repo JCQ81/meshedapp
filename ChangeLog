@@ -2,6 +2,14 @@
  CHANGES
 *********
 
+v1.2.0 (2024-06-23):
+- Channel support
+- RSS support
+- Web browser notifications
+- Auto response commands
+- Fix several Web UI bugs
+- Optimize reconnect
+
 v1.1.1 (2024-06-17):
 - Show URL as hyperlink
 - Fix message separator issue

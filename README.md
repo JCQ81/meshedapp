@@ -1,8 +1,20 @@
 # MeshedApp
 
-A simple web interface for your Meshtastic chat centrally hosted on your home server. 
+A simple self hosted web interface for your Meshtastic chat,  centrally hosted on your home server. 
+
+![](./img/mappinfr1.png)
 
 ![](./img/example1.png)
+
+## Index
+
+* [Setup](#setup)
+* [Docker](#docker)
+* [Synology NAS](#synology-nas)
+
+* [RSS](#rss)
+* [Web browser notifications](#web-browser-notifications)
+* [Auto response commands](#auto-response-commands)
 
 ## Setup
 
@@ -45,3 +57,23 @@ python3 -m pip install --upgrade pip
 python3 -m pip install --upgrade meshtastic flask waitress
 python3 ./meshedapp.py [meshtastic-device-ip]
 ```
+
+## RSS
+
+MeshedApp provides a simple RSS feed to notify on new messages. 
+Feed URL: [http://yourserver:6374/rss](http://yourserver:6374/rss)
+
+## Web browser notifications
+
+Note that most web browsers only allow notifications on a secure server (https). To contact MeshedApp through a secure connection use a [Reverse proxy](https://en.wikipedia.org/wiki/Reverse_proxy)
+
+## Auto response commands
+
+For testing purposes MeshedApp supports a set of auto response commands. These commands can be sent from a _remote_ user to the MeshedApp backend, which will respond accordingly. All the commands send to your MeshedApp setup will be stored in a "virtual channel" (_/CMD_) for review.
+
+| Command | Response |
+|-|-|
+| /ping | _...pong_ |
+| /pong | _/ping_ (can result in another _...pong_ when both sides are running MeshedApp) |
+| /echo _[text]_ | _[text]_ |
+| /joke | A random joke |
