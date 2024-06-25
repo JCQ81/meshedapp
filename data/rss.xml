@@ -2,6 +2,7 @@
 <rss version="2.0">
 <channel>
   <title>MeshedApp</title>
+  <link>%link</link>
   <description>Self hosted chat webserver for Meshtastic</description>
   <pubDate>%pubdate</pubDate>
   %item

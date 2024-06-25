@@ -9,7 +9,7 @@ chown -R meshedapp:meshedapp $PTH/store
 chmod -R 644 $PTH/store/*
 
 if [ -z $MESHTASTIC_HOST ]; then
-  su - meshedapp -c "cd $PTH; source ./env/bin/activate && python3 ./meshedapp.py" 2>/dev/null
+  su - meshedapp -c "cd $PTH; export TZ=$TZ; source ./env/bin/activate && python3 ./meshedapp.py" 2>/dev/null
 else
-  su - meshedapp -c "cd $PTH; source ./env/bin/activate && python3 ./meshedapp.py $MESHTASTIC_HOST" 2>/dev/null
+  su - meshedapp -c "cd $PTH; export TZ=$TZ; source ./env/bin/activate && python3 ./meshedapp.py $MESHTASTIC_HOST" 2>/dev/null
 fi

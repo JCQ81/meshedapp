@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-import time, os, sys, datetime, random, threading, traceback
+import time, os, sys, datetime, random, hashlib, threading, traceback
 import meshtastic, meshtastic.serial_interface, meshtastic.tcp_interface
 from flask import Flask, Response, json, request, send_file, abort
 from threading import Thread
@@ -180,11 +180,14 @@ def genfeed(sender=None, text=None):
   global rssfeed
   with open('data/rss.xml') as f:
     rssbody = f.read()
-  pubdate = datetime.datetime.now().strftime("%a, %d %b %Y %H:%M:%S %z").strip()
+  mappurl = 'https://github.com/JCQ81/meshedapp'
+  pubdate = datetime.datetime.now().strftime("%a, %d %b %Y %H:%M:%S +0000").strip()
+  guid = hashlib.md5(f'{sender}{text}{pubdate}'.encode('utf-8')).hexdigest()
   rssitem = "" 
   if sender != None:
-    rssitem = "<item><title>%sender</title><description>%text</description><pubDate>%pubdate</pubDate></item>".replace('%sender', sender).replace('%text', text).replace('%pubdate', pubdate)
-  rssfeed = rssbody.replace('%pubdate', pubdate).replace('%item', rssitem)
+    rssitem = "<item><title>%sender</title><description>%text</description><pubDate>%pubdate</pubDate><guid>%guid</guid></item>"
+    rssitem = rssitem.replace('%sender', sender).replace('%text', text).replace('%pubdate', pubdate).replace('%guid', guid)
+  rssfeed = rssbody.replace('%pubdate', pubdate).replace('%link', mappurl).replace('%item', rssitem)
 
 # Log.... :)
 def log(msg):

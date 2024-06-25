@@ -36,8 +36,9 @@ Now browse to [http://yourserver:6374](http://yourserver:6374)
 git clone https://github.com/JCQ81/meshedapp.git
 cd meshedapp
 docker build -t meshedapp .
-docker run -d --name meshedapp \
-  -e MESHTASTIC_HOST=192.168.0.1 -p 6374:6374 \
+docker run -d --name meshedapp -p 6374:6374 \
+  -e TZ=Europe/Amsterdam \
+  -e MESHTASTIC_HOST=192.168.0.1 \
   -v /path/to/store:/opt/meshedapp/store meshedapp
 ```
 
