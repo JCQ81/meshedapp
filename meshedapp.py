@@ -181,7 +181,7 @@ def genfeed(sender=None, text=None):
   with open('data/rss.xml') as f:
     rssbody = f.read()
   mappurl = 'https://github.com/JCQ81/meshedapp'
-  pubdate = datetime.datetime.now().strftime("%a, %d %b %Y %H:%M:%S +0000").strip()
+  pubdate = datetime.datetime.now().astimezone().strftime("%a, %d %b %Y %H:%M:%S %Z").strip()
   guid = hashlib.md5(f'{sender}{text}{pubdate}'.encode('utf-8')).hexdigest()
   rssitem = "" 
   if sender != None:
