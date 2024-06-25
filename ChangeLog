@@ -2,6 +2,10 @@
  CHANGES
 *********
 
+v1.2.1 (2024-06-25):
+- Fix RSS requirements
+- Fix timezone
+
 v1.2.0 (2024-06-23):
 - Channel support
 - RSS support
