@@ -25,7 +25,7 @@ dnf -y install git python3 python3-flask python3-pip python3-waitress
 pip install meshtastic
 git clone https://github.com/JCQ81/meshedapp.git
 cd meshedapp
-./meshedapp.py [meshtastic-device-ip] [meshedapp-url]
+./meshedapp.py [meshtastic-device-ip]
 ```
 
 Now browse to [http://yourserver:6374](http://yourserver:6374)
