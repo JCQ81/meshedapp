@@ -16,14 +16,14 @@ lpack = {}
 ltime = time.time()
 ltracelen = 0
 interface = None
-version = '1.2.0'
+version = '1.2.2'
 rssfeed = None
-autoreconnect = True
+autoreconnect = None
 
 app = Flask(__name__)
 
 # Initialize connection, gather info
-def init():
+def init(silent=False):
   global myId
   global nodes
   global channels
@@ -35,8 +35,9 @@ def init():
     interface = meshtastic.serial_interface.SerialInterface()
   else:
     interface = meshtastic.tcp_interface.TCPInterface(hostname=sys.argv[1])
-  log('Connected')
-  # Fill up buffers
+  if not silent:
+    log('Connected')
+  # Set global data
   myId = f'!{str(hex(interface.myInfo.my_node_num))[2:]}'
   for id,data in interface.nodes.items():
     nodes[id] = data['user']
@@ -71,6 +72,7 @@ def bgRefresh():
   global nodes
   global interface
   global ltracelen
+  global autoreconnect
   rcnt = 0
   while True:
     time.sleep(120)
@@ -83,10 +85,11 @@ def bgRefresh():
     ntracelen = len(stacktrace)
     # Reconnect on trace detection
     if ltracelen < ntracelen:
-      log(f'TraceData: {stacktrace[ltracelen:]}')
-      log(f'DataLength: {ntracelen}')      
+      if ltracelen < ntracelen+4 and datetime.datetime.now() > autoreconnect:
+        log(f'TraceData: {stacktrace[ltracelen:]}')
+        log(f'DataLength: {ntracelen}')      
+        reconnect()
       ltracelen = ntracelen
-      reconnect()
     # Reconnect every 30min anyway
     elif rcnt >= 15:
       rcnt = 0
@@ -151,24 +154,28 @@ def onReceive(packet, interface):
 # Auto reconnect on disconnect
 def onDisconnect(interface):
   global autoreconnect
-  if autoreconnect:
+  if datetime.datetime.now() > autoreconnect:
     log('Reconnecting... ')
     init()
 
 # Enforced reconnect (use when onDisconnect is not reliable)
-def reconnect():
+def reconnect(silent=False):
   global interface
-  global autoreconnect
-  log('Reconnecting... (forced)')
-  autoreconnect = False
+  if not silent:
+    log('Reconnecting... (forced)')
+  pauseAutoReconnect(1)
   interface.close()
   init()
-  autoreconnect = True
+
+# Set autoreconnect duration in minutes
+def pauseAutoReconnect(minutes):
+  global autoreconnect
+  autoreconnect = datetime.datetime.now() + datetime.timedelta(minutes = minutes)
 
 # Return files from ./web
 def httpfile(target):
-  if target in ['index.html', 'index.css', 'index.js', 'index.json', 'jquery-3.6.0.min.js', 'favicon.ico' ]:
-    if target == 'favicon.ico':
+  if target in ['index.html', 'index.css', 'index.js', 'index.json', 'jquery-3.6.0.min.js', 'favicon.ico', 'iclnk.png', 'icrfr.png', 'icrss.png', 'icpwr.png', 'sqbf.gif' ]:
+    if target[-4:] in [ '.ico', '.png', '.gif' ]:
       return send_file(f'./web/{target}', mimetype='image/gif')
     else:
       return send_file(f'./web/{target}', mimetype='text/' + target[::-1].split('.')[0][::-1])
@@ -256,7 +263,26 @@ def rt_msh_post(node):
   ltime = time.time()
   return Response('')
 
-# Node send
+# Power control
+@app.route('/msh/power', methods=['POST'])
+def rt_power_post():
+  global app
+  global interface
+  state = request.get_json(force=True)['state']
+  log('Power state change initiated from WebUI')
+  if state in [ '1', '3' ]:    
+    reconnect(True)
+    log('Rebooting Meshtastic Device...')    
+    interface.getNode('^local').reboot()
+    time.sleep(16)
+    reconnect(True)
+  if state in [ '2', '3' ]:
+    log('Stopping MeshedApp...')
+    sys.stdout.flush()
+    os.kill(os.getpid(), 9)
+  return Response('Finished')
+
+# RSS feed
 @app.route('/rss', methods=['GET'])
 def rt_rss_get():
   global rssfeed
@@ -265,9 +291,10 @@ def rt_rss_get():
   return Response(rssfeed, mimetype='application/rss+xml')
 
 #### == Main == ####
-if __name__ == '__main__':
+if __name__ == '__main__':  
   os.umask(18)
+  pauseAutoReconnect(3)  
   init()
   Thread(target=bgFlush, daemon=True, name='bgFlush').start()
-  Thread(target=bgRefresh, daemon=True, name='bgRefresh').start()
+  Thread(target=bgRefresh, daemon=True, name='bgRefresh').start()  
   serve(app, host="0.0.0.0", port=6374)
