@@ -8,13 +8,13 @@ A simple self hosted web interface for your Meshtastic chat,  centrally hosted o
 
 ## Index
 
-* [Setup](#setup)
-* [Docker](#docker)
-* [Synology NAS](#synology-nas)
+- [Setup](#setup)
+- [Docker](#docker)
+- [Synology NAS](#synology-nas)
 
-* [RSS](#rss)
-* [Web browser notifications](#web-browser-notifications)
-* [Auto response commands](#auto-response-commands)
+- [RSS](#rss)
+- [Web browser notifications](#web-browser-notifications)
+- [Auto response commands](#auto-response-commands)
 
 ## Setup
 
@@ -25,7 +25,7 @@ dnf -y install git python3 python3-flask python3-pip python3-waitress
 pip install meshtastic
 git clone https://github.com/JCQ81/meshedapp.git
 cd meshedapp
-./meshedapp.py [meshtastic-device-ip]
+while true; do ./meshedapp.py [meshtastic-device-ip] ; done
 ```
 
 Now browse to [http://yourserver:6374](http://yourserver:6374)
@@ -39,7 +39,8 @@ docker build -t meshedapp .
 docker run -d --name meshedapp -p 6374:6374 \
   -e TZ=Europe/Amsterdam \
   -e MESHTASTIC_HOST=192.168.0.1 \
-  -v /path/to/store:/opt/meshedapp/store meshedapp
+  -v /path/to/store:/opt/meshedapp/store \
+  --restart=always meshedapp 
 ```
 
 ## Synology NAS
@@ -56,13 +57,22 @@ source ./env/bin/activate
 python3 -m ensurepip
 python3 -m pip install --upgrade pip
 python3 -m pip install --upgrade meshtastic flask waitress
-python3 ./meshedapp.py [meshtastic-device-ip]
+while true; do python3 ./meshedapp.py [meshtastic-device-ip] ; done
 ```
 
 ## RSS
 
 MeshedApp provides a simple RSS feed to notify on new messages. 
 Feed URL: [http://yourserver:6374/rss](http://yourserver:6374/rss)
+
+Tested RSS Apps:
+
+- Android
+  - Feeder
+  - Plenary
+- Windows
+  - FeedNotifier
+  - Fluent Reader
 
 ## Web browser notifications
 
@@ -78,3 +88,7 @@ For testing purposes MeshedApp supports a set of auto response commands. These c
 | /pong | _/ping_ (can result in another _...pong_ when both sides are running MeshedApp) |
 | /echo _[text]_ | _[text]_ |
 | /joke | A random joke |
+
+Joke sources:
+- [https://github.com/minond/dadbot/blob/master/jokes.txt](https://github.com/minond/dadbot/blob/master/jokes.txt)
+- [https://github.com/yesinteractive/dadjokes/blob/master/controllers/jokes.txt](https://github.com/yesinteractive/dadjokes/blob/master/controllers/jokes.txt)
