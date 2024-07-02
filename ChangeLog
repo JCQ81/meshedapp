@@ -2,6 +2,14 @@
  CHANGES
 *********
 
+v1.2.2 (2024-07-02)
+- Update RSS
+- Add manual refresh
+- Add shutdown/restart options
+- Fix double reconnects
+- Additional Web UI bugs
+- Additional jokes
+
 v1.2.1 (2024-06-25):
 - Fix RSS requirements
 - Fix timezone
